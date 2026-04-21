@@ -9,7 +9,7 @@ A production-grade chat application combining a sleek web frontend with a robust
 ```
 btechx-ai/
 ├──templates/
-        ├── index.html          # Advanced chat interface (Frontend)  
+        └── index.html          # Advanced chat interface (Frontend)  
 ├── app.py
 ├── requirements.txt
 ├── btechxlogo.png             # Flask backend server
