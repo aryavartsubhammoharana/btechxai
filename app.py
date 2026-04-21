@@ -205,19 +205,20 @@ def log_response(response):
     log_message("INFO", f"Response: {response.status_code}")
     return response
 
+port = int(os.environ.get("PORT", 5000))
 # ─ APPLICATION ENTRY POINT ─
 if __name__ == '__main__':
     log_message("INFO", "=" * 60)
     log_message("INFO", "BTechX AI Server v2.0")
     log_message("INFO", "Powered by Sarvam AI (sarvam-30b)")
     log_message("INFO", "=" * 60)
-    log_message("INFO", "Starting server on http://localhost:5000")
-    log_message("INFO", "Health check: GET http://localhost:5000/health")
-    log_message("INFO", "Chat endpoint: POST http://localhost:5000/chat")
+    log_message("INFO", "Starting server on http://0.0.0.0:{port}")
+    log_message("INFO", "Health check: GET http://0.0.0.0:{port}/health")
+    log_message("INFO", "Chat endpoint: POST http://0.0.0.0:{port}/chat")
     log_message("INFO", "=" * 60)
     
     try:
-        app.run(debug=True, port=5000, host='localhost')
+        app.run(debug=False, host='0.0.0.0', port=port)
     except KeyboardInterrupt:
         log_message("INFO", "Server shutdown initiated")
     except Exception as e:
