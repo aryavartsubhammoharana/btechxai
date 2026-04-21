@@ -1,34 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BTechX AI — Advanced Chat</title>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --bg:           #0a0a0a;
-            --surface:      #141414;
-            --surface-alt:  #1a1a1a;
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-alt: #1a1a1a;
             --surface-high: #242424;
-            --border:       #2d2d2d;
-            --accent:       #ff7a5c;
+            --border: #2d2d2d;
+            --accent: #ff7a5c;
             --accent-light: #ffb3a0;
-            --accent-dark:  #cc6245;
-            --accent-glow:  rgba(255, 122, 92, 0.15);
+            --accent-dark: #cc6245;
+            --accent-glow: rgba(255, 122, 92, 0.15);
             --text-primary: #f5f1e8;
             --text-secondary: #b0a89a;
-            --text-muted:   #6b635a;
-            --success:      #4ade80;
-            --error:        #ff6b6b;
-            --radius-sm:    8px;
-            --radius-md:    12px;
-            --radius-lg:    16px;
-            --transition:   0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            --text-muted: #6b635a;
+            --success: #4ade80;
+            --error: #ff6b6b;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             font-family: 'Manrope', sans-serif;
@@ -46,7 +56,7 @@
             content: '';
             position: fixed;
             inset: 0;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 20% 50%, rgba(255, 122, 92, 0.08) 0%, transparent 50%),
                 radial-gradient(circle at 80% -20%, rgba(255, 122, 92, 0.06) 0%, transparent 40%),
                 url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
@@ -72,7 +82,9 @@
         header::after {
             content: '';
             position: absolute;
-            bottom: 0; left: 0; right: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
             height: 1px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
             opacity: 0.3;
@@ -136,8 +148,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         /* ─ CHAT AREA ─ */
@@ -162,15 +181,24 @@
             scroll-padding-top: 10px;
         }
 
-        #chat-box::-webkit-scrollbar { width: 6px; }
-        #chat-box::-webkit-scrollbar-track { background: transparent; }
-        #chat-box::-webkit-scrollbar-thumb { 
-            background: var(--border); 
+        #chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chat-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb {
+            background: var(--border);
             border-radius: 10px;
             border: 2px solid transparent;
             background-clip: padding-box;
         }
-        #chat-box::-webkit-scrollbar-thumb:hover { background-color: var(--accent); }
+
+        #chat-box::-webkit-scrollbar-thumb:hover {
+            background-color: var(--accent);
+        }
 
         /* ─ MESSAGE STRUCTURE ─ */
         .msg-group {
@@ -185,13 +213,16 @@
                 opacity: 0;
                 transform: translateY(12px) scale(0.98);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
         }
 
-        .msg-group.user { flex-direction: row-reverse; }
+        .msg-group.user {
+            flex-direction: row-reverse;
+        }
 
         .avatar {
             width: 36px;
@@ -226,7 +257,9 @@
             max-width: 70%;
         }
 
-        .msg-group.user .bubble-wrapper { align-items: flex-end; }
+        .msg-group.user .bubble-wrapper {
+            align-items: flex-end;
+        }
 
         .bubble {
             padding: 14px 16px;
@@ -258,7 +291,9 @@
             margin-top: 2px;
         }
 
-        .msg-group.user .timestamp { text-align: right; }
+        .msg-group.user .timestamp {
+            text-align: right;
+        }
 
         /* ─ TYPING INDICATOR ─ */
         .typing-bubble {
@@ -281,12 +316,26 @@
             animation: typingPulse 1.4s ease-in-out infinite;
         }
 
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
 
         @keyframes typingPulse {
-            0%, 100% { opacity: 0.3; transform: translateY(0); }
-            50% { opacity: 1; transform: translateY(-4px); }
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateY(-4px);
+            }
         }
 
         /* ─ WELCOME SCREEN ─ */
@@ -307,8 +356,15 @@
         }
 
         @keyframes floatIcon {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
         }
 
         .welcome-title {
@@ -444,7 +500,9 @@
             transition: opacity var(--transition);
         }
 
-        .btn:hover::before { opacity: 1; }
+        .btn:hover::before {
+            opacity: 1;
+        }
 
         .btn-send {
             background: linear-gradient(135deg, var(--accent), var(--accent-dark));
@@ -483,117 +541,146 @@
 
         /* ─ RESPONSIVE ─ */
         @media (max-width: 640px) {
-            header { padding: 12px 16px; height: 60px; }
-            header h1 { font-size: 1.1rem; }
-            .header-text p { font-size: 0.68rem; }
-            #chat-box { padding: 16px 12px; gap: 12px; }
-            .bubble-wrapper { max-width: 85%; }
-            .bubble { font-size: 0.9rem; padding: 12px 14px; }
-            .quick-prompts { grid-template-columns: 1fr; }
-            .btn-clear { display: none; }
-            .welcome-title { font-size: 1.6rem; }
+            header {
+                padding: 12px 16px;
+                height: 60px;
+            }
+
+            header h1 {
+                font-size: 1.1rem;
+            }
+
+            .header-text p {
+                font-size: 0.68rem;
+            }
+
+            #chat-box {
+                padding: 16px 12px;
+                gap: 12px;
+            }
+
+            .bubble-wrapper {
+                max-width: 85%;
+            }
+
+            .bubble {
+                font-size: 0.9rem;
+                padding: 12px 14px;
+            }
+
+            .quick-prompts {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-clear {
+                display: none;
+            }
+
+            .welcome-title {
+                font-size: 1.6rem;
+            }
         }
     </style>
 </head>
+
 <body>
 
-<header>
-    <div class="header-brand">
-        <div class="logo"><img src="btechxlogo.png" height="40"></div>
-        <div class="header-text">
-            <h1>AI</h1>
-            <p>Powered by BTechX</p>
-        </div>
-    </div>
-    <div class="header-status">
-        <div class="status-indicator"></div>
-        <span>Live</span>
-    </div>
-</header>
-
-<div class="chat-container">
-    <div id="chat-box">
-        <div class="welcome-screen">
-            <div class="welcome-icon">✦</div>
-            <div>
-                <h2 class="welcome-title">Namaste</h2>
-                <p class="welcome-subtitle">Your intelligent companion rooted in Indian culture, technology, and heritage. Start a conversation to explore knowledge across science, engineering, history, and more.</p>
-            </div>
-            <div class="quick-prompts">
-                <div class="prompt-chip" onclick="useSuggestion(this)">🏛️ Tell me about the Vedas</div>
-                <div class="prompt-chip" onclick="useSuggestion(this)">💻 Explain DSA in simple terms</div>
-                <div class="prompt-chip" onclick="useSuggestion(this)">🧮 History of Indian mathematics</div>
-                <div class="prompt-chip" onclick="useSuggestion(this)">🚀 ISRO's latest missions</div>
+    <header>
+        <div class="header-brand">
+            <div class="logo"><img src="btechxlogo.png" height="40"></div>
+            <div class="header-text">
+                <h1>AI</h1>
+                <p>Powered by BTechX</p>
             </div>
         </div>
-    </div>
-</div>
-
-<div class="input-section">
-    <div class="input-area">
-        <div class="input-field-wrapper">
-            <textarea
-                id="user-input"
-                rows="1"
-                placeholder="Ask me anything..."
-                onkeydown="handleKeyPress(event)"
-                oninput="autoResizeInput(this)"
-            ></textarea>
+        <div class="header-status">
+            <div class="status-indicator"></div>
+            <span>Live</span>
         </div>
-        <div class="action-buttons">
-            <button class="btn btn-clear" onclick="resetConversation()" title="Clear chat">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 6h18M8 6v12a2 2 0 002 2h4a2 2 0 002-2V6m-4-3v3m-4-3v3"/>
-                </svg>
-                Clear
-            </button>
-            <button class="btn btn-send" id="send-btn" onclick="sendMessage()" title="Send message">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                </svg>
-                Send
-            </button>
+    </header>
+
+    <div class="chat-container">
+        <div id="chat-box">
+            <div class="welcome-screen">
+                <div class="welcome-icon">✦</div>
+                <div>
+                    <h2 class="welcome-title">Namaste</h2>
+                    <p class="welcome-subtitle">Your intelligent companion rooted in Indian culture, technology, and
+                        heritage. Start a conversation to explore knowledge across science, engineering, history, and
+                        more.</p>
+                </div>
+                <div class="quick-prompts">
+                    <div class="prompt-chip" onclick="useSuggestion(this)">🏛️ Tell me about the Vedas</div>
+                    <div class="prompt-chip" onclick="useSuggestion(this)">💻 Explain DSA in simple terms</div>
+                    <div class="prompt-chip" onclick="useSuggestion(this)">🧮 History of Indian mathematics</div>
+                    <div class="prompt-chip" onclick="useSuggestion(this)">🚀 ISRO's latest missions</div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    const chatBox = document.getElementById('chat-box');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
-    const API_URL = 'http://localhost:5000/chat';
+    <div class="input-section">
+        <div class="input-area">
+            <div class="input-field-wrapper">
+                <textarea id="user-input" rows="1" placeholder="Ask me anything..." onkeydown="handleKeyPress(event)"
+                    oninput="autoResizeInput(this)"></textarea>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-clear" onclick="resetConversation()" title="Clear chat">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M8 6v12a2 2 0 002 2h4a2 2 0 002-2V6m-4-3v3m-4-3v3" />
+                    </svg>
+                    Clear
+                </button>
+                <button class="btn btn-send" id="send-btn" onclick="sendMessage()" title="Send message">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                    </svg>
+                    Send
+                </button>
+            </div>
+        </div>
+    </div>
 
-    let isLoading = false;
-    let conversationHistory = [];
-    let hasStartedConversation = false;
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        // index.html ki script mein ise change karein
+        const API_URL = window.location.origin + '/chat';
 
-    // ─ UTILITY FUNCTIONS ─
-    function getTime() {
-        return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
+        let isLoading = false;
+        let conversationHistory = [];
+        let hasStartedConversation = false;
 
-    function autoResizeInput(el) {
-        el.style.height = 'auto';
-        el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-    }
+        // ─ UTILITY FUNCTIONS ─
+        function getTime() {
+            return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
 
-    function scrollToBottom() {
-        setTimeout(() => {
-            chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
-        }, 0);
-    }
+        function autoResizeInput(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        }
 
-    function useSuggestion(chip) {
-        userInput.value = chip.textContent.replace(/^[^\s]*\s/, '');
-        autoResizeInput(userInput);
-        userInput.focus();
-    }
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+            }, 0);
+        }
 
-    function resetConversation() {
-        if (!conversationHistory.length || confirm('Clear conversation history?')) {
-            conversationHistory = [];
-            hasStartedConversation = false;
-            chatBox.innerHTML = `
+        function useSuggestion(chip) {
+            userInput.value = chip.textContent.replace(/^[^\s]*\s/, '');
+            autoResizeInput(userInput);
+            userInput.focus();
+        }
+
+        function resetConversation() {
+            if (!conversationHistory.length || confirm('Clear conversation history?')) {
+                conversationHistory = [];
+                hasStartedConversation = false;
+                chatBox.innerHTML = `
                 <div class="welcome-screen">
                     <div class="welcome-icon">✦</div>
                     <div>
@@ -607,130 +694,131 @@
                         <div class="prompt-chip" onclick="useSuggestion(this)">🚀 ISRO's latest missions</div>
                     </div>
                 </div>`;
-        }
-    }
-
-    // ─ MESSAGE RENDERING ─
-    function addMessage(text, sender, isError = false) {
-        const msgGroup = document.createElement('div');
-        msgGroup.className = `msg-group ${sender}`;
-
-        const avatar = document.createElement('div');
-        avatar.className = `avatar ${sender}`;
-        avatar.textContent = sender === 'ai' ? 'B' : 'U';
-
-        const bubbleWrapper = document.createElement('div');
-        bubbleWrapper.className = 'bubble-wrapper';
-
-        const bubble = document.createElement('div');
-        bubble.className = `bubble ${sender}${isError ? ' error' : ''}`;
-        bubble.textContent = text;
-
-        const timestamp = document.createElement('div');
-        timestamp.className = 'timestamp';
-        timestamp.textContent = getTime();
-
-        bubbleWrapper.appendChild(bubble);
-        bubbleWrapper.appendChild(timestamp);
-
-        msgGroup.appendChild(avatar);
-        msgGroup.appendChild(bubbleWrapper);
-        chatBox.appendChild(msgGroup);
-
-        scrollToBottom();
-        return bubble;
-    }
-
-    function showTypingIndicator() {
-        const msgGroup = document.createElement('div');
-        msgGroup.className = 'msg-group ai';
-        msgGroup.id = 'typing-indicator';
-
-        const avatar = document.createElement('div');
-        avatar.className = 'avatar ai';
-        avatar.textContent = 'B';
-
-        const bubbleWrapper = document.createElement('div');
-        bubbleWrapper.className = 'bubble-wrapper';
-
-        const bubble = document.createElement('div');
-        bubble.className = 'typing-bubble';
-        bubble.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
-
-        bubbleWrapper.appendChild(bubble);
-        msgGroup.appendChild(avatar);
-        msgGroup.appendChild(bubbleWrapper);
-        chatBox.appendChild(msgGroup);
-
-        scrollToBottom();
-    }
-
-    function removeTypingIndicator() {
-        const el = document.getElementById('typing-indicator');
-        if (el) el.remove();
-    }
-
-    // ─ MESSAGE SENDING ─
-    async function sendMessage() {
-        const text = userInput.value.trim();
-        if (!text || isLoading) return;
-
-        // Remove welcome screen on first message
-        if (!hasStartedConversation) {
-            chatBox.innerHTML = '';
-            hasStartedConversation = true;
+            }
         }
 
-        addMessage(text, 'user');
-        conversationHistory.push({ role: 'user', content: text });
-        userInput.value = '';
-        userInput.style.height = 'auto';
+        // ─ MESSAGE RENDERING ─
+        function addMessage(text, sender, isError = false) {
+            const msgGroup = document.createElement('div');
+            msgGroup.className = `msg-group ${sender}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = `avatar ${sender}`;
+            avatar.textContent = sender === 'ai' ? 'B' : 'U';
+
+            const bubbleWrapper = document.createElement('div');
+            bubbleWrapper.className = 'bubble-wrapper';
+
+            const bubble = document.createElement('div');
+            bubble.className = `bubble ${sender}${isError ? ' error' : ''}`;
+            bubble.textContent = text;
+
+            const timestamp = document.createElement('div');
+            timestamp.className = 'timestamp';
+            timestamp.textContent = getTime();
+
+            bubbleWrapper.appendChild(bubble);
+            bubbleWrapper.appendChild(timestamp);
+
+            msgGroup.appendChild(avatar);
+            msgGroup.appendChild(bubbleWrapper);
+            chatBox.appendChild(msgGroup);
+
+            scrollToBottom();
+            return bubble;
+        }
+
+        function showTypingIndicator() {
+            const msgGroup = document.createElement('div');
+            msgGroup.className = 'msg-group ai';
+            msgGroup.id = 'typing-indicator';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar ai';
+            avatar.textContent = 'B';
+
+            const bubbleWrapper = document.createElement('div');
+            bubbleWrapper.className = 'bubble-wrapper';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'typing-bubble';
+            bubble.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+
+            bubbleWrapper.appendChild(bubble);
+            msgGroup.appendChild(avatar);
+            msgGroup.appendChild(bubbleWrapper);
+            chatBox.appendChild(msgGroup);
+
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const el = document.getElementById('typing-indicator');
+            if (el) el.remove();
+        }
+
+        // ─ MESSAGE SENDING ─
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text || isLoading) return;
+
+            // Remove welcome screen on first message
+            if (!hasStartedConversation) {
+                chatBox.innerHTML = '';
+                hasStartedConversation = true;
+            }
+
+            addMessage(text, 'user');
+            conversationHistory.push({ role: 'user', content: text });
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            userInput.focus();
+
+            isLoading = true;
+            sendBtn.disabled = true;
+            showTypingIndicator();
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, history: conversationHistory })
+                });
+
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+                const data = await res.json();
+                removeTypingIndicator();
+
+                const reply = data.response || 'No response received.';
+                conversationHistory.push({ role: 'assistant', content: reply });
+                addMessage(reply, 'ai');
+
+            } catch (err) {
+                removeTypingIndicator();
+                console.error('API Error:', err);
+                addMessage(
+                    '⚠️ Could not reach BTechX AI server. Ensure your Flask backend is running on localhost:5000.',
+                    'ai',
+                    true
+                );
+            }
+
+            isLoading = false;
+            sendBtn.disabled = false;
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // ─ INITIAL FOCUS ─
         userInput.focus();
-
-        isLoading = true;
-        sendBtn.disabled = true;
-        showTypingIndicator();
-
-        try {
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text, history: conversationHistory })
-            });
-
-            if (!res.ok) throw new Error(`Server error: ${res.status}`);
-
-            const data = await res.json();
-            removeTypingIndicator();
-
-            const reply = data.response || 'No response received.';
-            conversationHistory.push({ role: 'assistant', content: reply });
-            addMessage(reply, 'ai');
-
-        } catch (err) {
-            removeTypingIndicator();
-            console.error('API Error:', err);
-            addMessage(
-                '⚠️ Could not reach BTechX AI server. Ensure your Flask backend is running on localhost:5000.',
-                'ai',
-                true
-            );
-        }
-
-        isLoading = false;
-        sendBtn.disabled = false;
-    }
-
-    function handleKeyPress(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    }
-
-    // ─ INITIAL FOCUS ─
-    userInput.focus();
-</script>
+    </script>
 
 </body>
+
 </html>
