@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
@@ -9,7 +10,8 @@ from sarvamai import SarvamAI
 app = Flask(__name__, template_folder='templates', static_folder='.', static_url_path='')
 CORS(app)  # Enables cross-origin requests from frontend
 
-API_KEY = "sk_jcv5xfju_a9RyAAM7JZo9wnLy6Fde9oxq"
+# API_KEY = "sk_jcv5xfju_a9RyAAM7JZo9wnLy6Fde9oxq"
+API_KEY = os.environ.get("SARVAM_API_KEY")
 client = SarvamAI(api_subscription_key=API_KEY)
 
 # ─ SYSTEM CONFIGURATION ─
