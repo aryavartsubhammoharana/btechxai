@@ -8,8 +8,11 @@ A production-grade chat application combining a sleek web frontend with a robust
 
 ```
 btechx-ai/
-├── index.html          # Advanced chat interface (Frontend)
-├── app.py             # Flask backend server
+├──templates/
+        ├── index.html          # Advanced chat interface (Frontend)  
+├── app.py
+├── requirements.txt
+├── btechxlogo.png             # Flask backend server
 └── README.md          # This file
 ```
 
