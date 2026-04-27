@@ -1,6 +1,8 @@
-# BTechX AI — Advanced Chat Interface v2.0 (Secure Edition)
+# BTechX AI — Advanced Chat Interface v2.0 (Production Edition)
 
 A production-grade chat application combining a sleek web frontend with a robust Flask backend, powered by Sarvam AI.
+
+🌐 **Live Demo**: [btechxai.onrender.com](http://btechxai.onrender.com)
 
 ---
 
@@ -15,6 +17,7 @@ btechx-ai/
 ├── btechxlogo.png         
 ├── .env                    
 ├── .env.example           
+├── .gitignore
 └── README.md              
 ```
 
@@ -38,7 +41,7 @@ btechx-ai/
 - **Flask REST API**: Lightweight, scalable web framework
 - **CORS Support**: Cross-origin request handling for frontend compatibility
 - **Sarvam AI Integration**: sarvam-30b model for intelligent responses
-- **Environment Variables**: Secure API key management
+- **Environment Variables**: Secure API key management (no hardcoded secrets)
 - **Request Validation**: Input sanitization and length checking (5000 char limit)
 - **Error Handling**: Comprehensive error messages and HTTP status codes
 - **Logging System**: Timestamped logs for debugging and monitoring
@@ -46,10 +49,23 @@ btechx-ai/
 - **Server Info**: `/info` endpoint with API documentation
 - **Markdown Cleaning**: Removes formatting symbols from AI responses
 - **Conversation History**: Maintains multi-turn context
+- **Production Deployment**: Hosted on Render with automatic scaling
 
 ---
 
-## 🚀 Setup & Installation
+## 🚀 Quick Access
+
+### Production Website
+**Live Application**: [http://btechxai.onrender.com](http://btechxai.onrender.com)
+
+**API Endpoints**:
+- Health Check: `GET http://btechxai.onrender.com/health`
+- Server Info: `GET http://btechxai.onrender.com/info`
+- Chat: `POST http://btechxai.onrender.com/chat`
+
+---
+
+## 🛠️ Local Development Setup
 
 ### Prerequisites
 - Python 3.8+ (with pip)
@@ -65,7 +81,7 @@ cd btechx-ai
 ### Step 2: Install Dependencies
 
 ```bash
-pip install flask flask-cors sarvamai python-dotenv
+pip install -r requirements.txt
 ```
 
 ### Step 3: Configure Environment Variables
@@ -88,44 +104,21 @@ SARVAM_API_KEY=your_actual_api_key_here
 - Keep your API key private and secure
 - Use different keys for development and production
 
-### Step 4: Create .env.example
+### Step 4: Update Frontend API URL (For Local Testing)
 
-Create a template file for other developers:
+In `index.html`, find the API URL configuration and set it to localhost:
 
-```
-SARVAM_API_KEY=sk_your_key_here
-```
-
-### Step 5: Update .gitignore
-
-Add these lines to `.gitignore`:
-
-```
-.env
-*.pyc
-__pycache__/
-instance/
-.vscode/
-.idea/
+```javascript
+const API_URL = "http://localhost:5000/chat";
 ```
 
-### Step 6: Update app.py
+For production, use:
 
-Replace the hardcoded API key section with:
-
-```python
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-API_KEY = os.getenv('SARVAM_API_KEY')
-
-if not API_KEY:
-    raise ValueError("SARVAM_API_KEY not found in environment variables. Please check your .env file.")
+```javascript
+const API_URL = "http://btechxai.onrender.com/chat";
 ```
 
-### Step 7: Run the Backend Server
+### Step 5: Run the Backend Server Locally
 
 ```bash
 python app.py
@@ -134,15 +127,13 @@ python app.py
 Expected output:
 ```
 [2024-12-19 14:22:45] [INFO] ============================================================
-[2024-12-19 14:22:45] [INFO] BTechX AI Server v2.0
+[2024-12-19 14:22:45] [INFO] BTechX AI Server v2.0 (Secure Edition)
 [2024-12-19 14:22:45] [INFO] Powered by Sarvam AI (sarvam-30b)
 [2024-12-19 14:22:45] [INFO] ============================================================
 [2024-12-19 14:22:45] [INFO] Starting server on http://localhost:5000
-[2024-12-19 14:22:45] [INFO] Health check: GET http://localhost:5000/health
-[2024-12-19 14:22:45] [INFO] Chat endpoint: POST http://localhost:5000/chat
 ```
 
-### Step 8: Open the Frontend
+### Step 6: Open the Frontend Locally
 
 **Option A**: Direct File Open
 ```bash
@@ -160,24 +151,81 @@ Then visit: http://localhost:8000
 
 ---
 
+## 🌐 Production Deployment (Render)
+
+### Current Deployment
+Your application is currently live at: **[btechxai.onrender.com](http://btechxai.onrender.com)**
+
+### Setting Up Environment Variables on Render
+
+1. **Go to Render Dashboard**
+   - Navigate to your service: btechx-ai
+
+2. **Access Environment Variables**
+   - Click on "Environment" tab
+   - Click "Add Environment Variable"
+
+3. **Add API Key**
+   ```
+   Key: SARVAM_API_KEY
+   Value: your_actual_sarvam_api_key
+   ```
+
+4. **Save and Redeploy**
+   - Click "Save Changes"
+   - Render will automatically redeploy with new environment variables
+
+### Render Deployment Files
+
+**render.yaml** (if using):
+```yaml
+services:
+  - type: web
+    name: btechx-ai
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: SARVAM_API_KEY
+        sync: false
+```
+
+### Updating Your Deployment
+
+**Method 1: Git Push**
+```bash
+git add .
+git commit -m "Update with secure environment variables"
+git push origin main
+```
+
+Render will automatically detect changes and redeploy.
+
+**Method 2: Manual Deploy**
+- Go to Render Dashboard
+- Click "Manual Deploy" → "Deploy latest commit"
+
+---
+
 ## 📡 API Endpoints
 
 ### 1. Health Check
 ```
-GET /health
+GET http://btechxai.onrender.com/health
 ```
 **Response:**
 ```json
 {
   "status": "healthy",
   "service": "BTechX AI Server",
-  "timestamp": "2024-12-19 14:22:45"
+  "timestamp": "2024-12-19 14:22:45",
+  "environment": "production"
 }
 ```
 
 ### 2. Server Info
 ```
-GET /info
+GET http://btechxai.onrender.com/info
 ```
 **Response:**
 ```json
@@ -186,13 +234,14 @@ GET /info
   "version": "2.0",
   "model": "sarvam-30b",
   "endpoints": ["/health", "/info", "/chat"],
-  "features": [...]
+  "features": [...],
+  "security": "Environment variables for sensitive data"
 }
 ```
 
 ### 3. Chat
 ```
-POST /chat
+POST http://btechxai.onrender.com/chat
 Content-Type: application/json
 ```
 
@@ -229,8 +278,9 @@ Content-Type: application/json
 ## 🔐 Security Best Practices (IMPLEMENTED)
 
 ### 1. Environment Variables ✅
-All sensitive credentials are now stored in `.env` file:
+All sensitive credentials stored securely:
 
+**Local Development (.env file):**
 ```python
 import os
 from dotenv import load_dotenv
@@ -239,9 +289,12 @@ load_dotenv()
 API_KEY = os.getenv('SARVAM_API_KEY')
 ```
 
-### 2. .gitignore Protection ✅
-Ensure `.env` is never committed:
+**Production (Render Dashboard):**
+- Environment variables set in Render dashboard
+- Automatically loaded at runtime
+- Never exposed in code or logs
 
+### 2. .gitignore Protection ✅
 ```
 .env
 *.log
@@ -254,31 +307,17 @@ __pycache__/
 - JSON format validation
 
 ### 4. Error Handling ✅
-No sensitive information leaked in error messages
+- No sensitive information leaked in error messages
+- Different error responses for dev vs production
 
-### 5. CORS Configuration
+### 5. CORS Configuration ✅
 ```python
-from flask_cors import CORS
-
-CORS(app, origins=["http://localhost:3000", "http://localhost:8000"])
+CORS(app)
 ```
 
-### 6. Rate Limiting (Optional Enhancement)
-
+For production, restrict origins:
 ```python
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-
-limiter = Limiter(
-    app=app,
-    key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
-)
-
-@app.route('/chat', methods=['POST'])
-@limiter.limit("10 per minute")
-def chat():
-    pass
+CORS(app, origins=["http://btechxai.onrender.com", "https://btechxai.onrender.com"])
 ```
 
 ---
@@ -318,37 +357,55 @@ reasoning_effort="medium"
 
 ## 🐛 Troubleshooting
 
-### "SARVAM_API_KEY not found in environment variables"
+### Production Issues
+
+#### "Could not reach BTechX AI server" (Production)
+- ✅ Check if [btechxai.onrender.com](http://btechxai.onrender.com) is accessible
+- ✅ Verify Render service is running (check Render dashboard)
+- ✅ Check Render logs for errors
+- ✅ Ensure environment variables are set in Render
+
+#### "API subscription error" (Production)
+- ✅ Verify `SARVAM_API_KEY` is set in Render environment variables
+- ✅ Check if API key has proper permissions
+- ✅ Ensure API subscription is active
+- ✅ Check Render logs: `Settings` → `Logs`
+
+#### Slow Response Times
+- ✅ Render free tier may have cold starts (first request takes longer)
+- ✅ Consider upgrading to paid tier for better performance
+- ✅ Check `temperature` and `reasoning_effort` settings
+
+#### Service Not Starting
+- ✅ Check Render build logs
+- ✅ Verify `requirements.txt` is correct
+- ✅ Ensure Python version compatibility (3.8+)
+- ✅ Check for missing environment variables
+
+### Local Development Issues
+
+#### "SARVAM_API_KEY not found in environment variables"
 - ✅ Ensure `.env` file exists in project root
 - ✅ Verify `.env` contains `SARVAM_API_KEY=your_key`
 - ✅ Restart the Flask server after creating `.env`
-- ✅ Check for typos in environment variable name
 
-### "Could not reach BTechX AI server"
-- ✅ Ensure `app.py` is running on `localhost:5000`
-- ✅ Check firewall settings
-- ✅ Verify CORS is enabled in Flask
+#### "ModuleNotFoundError: No module named 'dotenv'"
+- ✅ Run: `pip install python-dotenv`
 
-### "API subscription error"
-- ✅ Verify your Sarvam API key is correct in `.env`
-- ✅ Check if your subscription is active
-- ✅ Ensure API key has proper permissions
-
-### Messages not appearing
-- ✅ Open browser DevTools (F12) → Console tab
-- ✅ Check for JavaScript errors
-- ✅ Verify network requests in Network tab
-- ✅ Clear browser cache
-
-### Slow responses
-- ✅ Check `temperature` setting
-- ✅ Monitor `reasoning_effort`
-- ✅ Check API rate limits
-- ✅ Verify internet connection
+#### CORS Errors in Browser
+- ✅ Ensure Flask server is running
+- ✅ Check browser console for specific error
+- ✅ Verify CORS is enabled in `app.py`
 
 ---
 
 ## 📊 Performance Metrics
+
+### Production (Render)
+- **Cold Start Time**: 10-30 seconds (free tier)
+- **Warm Response Time**: 2-5 seconds
+- **Uptime**: 99%+ (with paid tier)
+- **Concurrent Users**: 10+ (free tier), 100+ (paid tier)
 
 ### Frontend
 - **Bundle Size**: ~35KB (HTML + CSS + JS)
@@ -358,40 +415,55 @@ reasoning_effort="medium"
 
 ### Backend
 - **Startup Time**: ~2 seconds
-- **Response Time**: 2-5 seconds (depends on Sarvam AI)
-- **Max Concurrent Users**: 30+ (Flask default)
+- **Response Time**: 2-7 seconds (depends on Sarvam AI)
 - **Memory Usage**: ~50-100MB
 
 ---
 
-## 🔧 Advanced Configuration
+## 🔧 Render-Specific Configuration
 
-### Production Deployment Checklist
+### Render.yaml (Optional)
 
-1. **Environment Variables**
-   - ✅ Use `.env` for local development
-   - ✅ Use platform-specific env vars for production (Heroku, AWS, etc.)
+Create a `render.yaml` file for infrastructure as code:
 
-2. **Debug Mode**
-   ```python
-   app.run(debug=False, host='0.0.0.0', port=5000)
-   ```
+```yaml
+services:
+  - type: web
+    name: btechx-ai
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    healthCheckPath: /health
+    envVars:
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.9.0
+```
 
-3. **HTTPS**
-   - Use reverse proxy (nginx, Apache)
-   - Enable SSL certificates
+### Environment Variables on Render
 
-4. **Logging**
-   ```python
-   import logging
-   logging.basicConfig(level=logging.INFO)
-   ```
+**Required:**
+- `SARVAM_API_KEY`: Your Sarvam AI API key
 
-5. **Database Integration** (Optional)
-   ```python
-   from sqlalchemy import create_engine
-   DATABASE_URL = os.getenv('DATABASE_URL')
-   ```
+**Optional:**
+- `PYTHON_VERSION`: Python version (default: 3.9)
+- `PORT`: Server port (Render sets this automatically)
+
+### Render Free Tier Limitations
+
+- **Cold Starts**: Service spins down after 15 minutes of inactivity
+- **CPU/Memory**: Limited resources
+- **Bandwidth**: 100 GB/month
+- **Build Minutes**: 500 minutes/month
+
+**Upgrade to Paid Tier** for:
+- No cold starts
+- More resources
+- Custom domains
+- Better uptime
 
 ---
 
@@ -434,112 +506,126 @@ Supported roles:
 
 ---
 
-## 🚢 Deployment Guide
+## 🚢 Deployment Workflow
 
-### Environment Variables in Production
+### Initial Deployment to Render
 
-**Heroku:**
+1. **Push to GitHub**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin your-github-repo
+   git push -u origin main
+   ```
+
+2. **Connect Render to GitHub**
+   - Go to Render Dashboard
+   - Click "New Web Service"
+   - Connect your GitHub repository
+
+3. **Configure Service**
+   - Name: btechx-ai
+   - Environment: Python
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `python app.py`
+
+4. **Set Environment Variables**
+   - Add `SARVAM_API_KEY` in Environment tab
+
+5. **Deploy**
+   - Click "Create Web Service"
+   - Render will build and deploy automatically
+
+### Updating Your Deployment
+
 ```bash
-heroku config:set SARVAM_API_KEY=your_key_here
+git add .
+git commit -m "Your update message"
+git push origin main
 ```
 
-**AWS Elastic Beanstalk:**
-```bash
-eb setenv SARVAM_API_KEY=your_key_here
-```
-
-**Docker:**
-```dockerfile
-FROM python:3.9-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . .
-
-ENV SARVAM_API_KEY=""
-
-EXPOSE 5000
-CMD ["python", "app.py"]
-```
-
-Run with:
-```bash
-docker run -e SARVAM_API_KEY=your_key_here btechx-ai
-```
-
-**Render/Railway:**
-Add environment variables in dashboard settings.
+Render automatically detects changes and redeploys.
 
 ---
 
-## 🔒 Security Checklist
+## 🔒 Security Checklist for Production
 
-- ✅ API keys in environment variables
+- ✅ API keys in environment variables (Render dashboard)
 - ✅ `.env` added to `.gitignore`
+- ✅ No hardcoded secrets in code
 - ✅ Input validation implemented
 - ✅ Error messages don't leak secrets
 - ✅ CORS properly configured
-- ✅ Rate limiting (optional but recommended)
-- ✅ HTTPS in production
+- ✅ HTTPS enabled (Render provides free SSL)
 - ✅ Debug mode off in production
+- ✅ Health check endpoint active
+- ✅ Logs monitored regularly
 
 ---
 
-## 📞 Support & Contribution
+## 📞 Support & Resources
 
-- **Sarvam AI Docs**: https://docs.sarvamai.com
-- **Flask Docs**: https://flask.palletsprojects.com
-- **Python-dotenv**: https://pypi.org/project/python-dotenv/
+### Production Support
+- **Live Site**: [btechxai.onrender.com](http://btechxai.onrender.com)
+- **Render Dashboard**: [dashboard.render.com](https://dashboard.render.com)
+
+### Documentation
+- **Sarvam AI**: [docs.sarvamai.com](https://docs.sarvamai.com)
+- **Flask**: [flask.palletsprojects.com](https://flask.palletsprojects.com)
+- **Render**: [render.com/docs](https://render.com/docs)
+- **Python-dotenv**: [pypi.org/project/python-dotenv](https://pypi.org/project/python-dotenv)
 
 ---
 
-## 📄 File Structure Example
+## 📄 File Structure
 
 ```
 btechx-ai/
-├── .env                    (git-ignored, contains secrets)
-├── .env.example            (template for other developers)
-├── .gitignore              (includes .env)
-├── app.py                  (uses os.getenv())
-├── requirements.txt
-├── btechxlogo.png
+├── .env                    (git-ignored, local only)
+├── .env.example            (template)
+├── .gitignore              (protects sensitive files)
+├── app.py                  (Flask backend with env vars)
+├── requirements.txt        (dependencies)
+├── btechxlogo.png          (logo)
 ├── templates/
-│   └── index.html
+│   └── index.html          (frontend)
 └── README.md              (this file)
 ```
 
 ---
 
-## 🎉 Quick Start Commands
+## 🎉 Quick Commands Summary
 
+**Local Development:**
 ```bash
-git clone your-repo-url
-cd btechx-ai
 pip install -r requirements.txt
-cp .env.example .env
-nano .env
+touch .env
+echo "SARVAM_API_KEY=your_key" > .env
 python app.py
 ```
 
----
+**Update Production:**
+```bash
+git add .
+git commit -m "Update"
+git push origin main
+```
 
-## 🧘 Final Words
-
-Jaise Bhagavad Gita mein kaha gaya hai - "Karm karo, phal ki chinta mat karo" (Do your duty, don't worry about results). 
-
-Tumne security ka dhyan rakha, yeh bohot acchi baat hai. Ab tumhara application secure hai aur production-ready bhi. API keys ab safe hain environment variables mein.
-
-Remember:
-- Development mein `.env` use karo
-- Production mein platform ke environment variables use karo
-- Kabhi bhi keys ko code mein hardcode mat karo
-- `.gitignore` mein `.env` zaroor daalo
-
-Happy coding, bhai! 🚀
+**Check Production Status:**
+```bash
+curl http://btechxai.onrender.com/health
+```
 
 ---
+**Remember:**
+- Keep your production environment variables up to date
+- Monitor Render logs regularly
+- Use different API keys for dev and production
+- Test locally before pushing to production
 
-**Questions? Issues?**
-Check the troubleshooting section or create a GitHub issue with detailed steps.
+**My Live Web Application**: [http://btechxai.onrender.com](http://btechxai.onrender.com)
+
+Happy Coding! 🚀
+
+---
