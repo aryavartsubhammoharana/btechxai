@@ -63,7 +63,7 @@ pip install flask flask-cors sarvamai
 
 In `app.py`, line 15:
 ```python
-API_KEY = "sk_jcv5xfju_a9RyAAM7JZo9wnLy6Fde9oxq"
+API_KEY = "your_sarvam_api_key"
 ```
 
 **Important**: Replace with your actual Sarvam AI API key. Never commit keys to version control.
