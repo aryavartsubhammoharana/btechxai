@@ -626,6 +626,4 @@ curl http://btechxai.onrender.com/health
 
 **My Live Web Application**: [http://btechxai.onrender.com](http://btechxai.onrender.com)
 
-Happy Coding! 🚀
-
 ---
