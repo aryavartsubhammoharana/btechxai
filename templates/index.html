@@ -329,6 +329,214 @@
             background: var(--accent);
         }
 
+        /* ─── CHAT HISTORY BUTTON ─── */
+        .btn-history {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--surface-high);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .btn-history:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(255, 122, 92, 0.08);
+        }
+
+        /* ─── CHAT HISTORY PANEL ─── */
+        #chat-history-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 150;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #chat-history-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        #chat-history-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 320px;
+            max-width: 90vw;
+            height: 100%;
+            background: linear-gradient(180deg, #0f0f0f 0%, #111111 100%);
+            border-left: 1px solid var(--border);
+            z-index: 160;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -8px 0 40px rgba(0, 0, 0, 0.5);
+        }
+
+        #chat-history-panel.open {
+            transform: translateX(0);
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .history-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .history-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--surface-high);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .history-close:hover {
+            background: rgba(255, 122, 92, 0.12);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .history-actions {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .btn-new-chat {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            border: none;
+            border-radius: var(--radius-md);
+            color: #fff;
+            font-family: 'Manrope', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .btn-new-chat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(255, 122, 92, 0.35);
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .chat-list-loading {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .chat-item {
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            background: var(--surface-high);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .chat-item:hover {
+            border-color: rgba(255, 122, 92, 0.4);
+            background: rgba(255, 122, 92, 0.06);
+        }
+
+        .chat-item.active {
+            border-color: var(--accent);
+            background: rgba(255, 122, 92, 0.1);
+        }
+
+        .chat-item-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-item-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .chat-item-delete {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all var(--transition-fast);
+        }
+
+        .chat-item:hover .chat-item-delete {
+            opacity: 1;
+        }
+
+        .chat-item-delete:hover {
+            color: var(--error);
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .chat-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .chat-empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
         .header-brand {
             display: flex;
             align-items: center;
@@ -591,6 +799,47 @@
             border: 1px solid rgba(255, 180, 150, 0.2);
             color: #fff;
             box-shadow: 0 4px 18px rgba(255, 122, 92, 0.3), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+        }
+
+        .bubble a,
+        .bubble a:visited {
+            color: var(--accent-light);
+            text-decoration: underline;
+            text-decoration-thickness: 1.5px;
+            text-underline-offset: 2px;
+        }
+
+        .bubble.user a,
+        .bubble.user a:visited {
+            color: #fff4ef;
+        }
+
+        .bubble a:hover,
+        .bubble a:focus-visible {
+            color: #ffffff;
+        }
+
+        .message-line,
+        .message-title {
+            white-space: normal;
+        }
+
+        .message-line + .message-line,
+        .message-title + .message-line,
+        .message-line + .message-title,
+        .message-title + .message-title {
+            margin-top: 6px;
+        }
+
+        .message-title {
+            font-size: 1.08rem;
+            font-weight: 800;
+            line-height: 1.35;
+            letter-spacing: 0.01em;
+        }
+
+        .message-spacer {
+            height: 12px;
         }
 
         .timestamp {
@@ -997,6 +1246,65 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
+        .message-code-block {
+            margin-top: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+            overflow: hidden;
+            background: rgba(15, 15, 15, 0.95);
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .code-header span {
+            color: var(--text-primary);
+        }
+
+        .code-copy-btn {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+            padding: 6px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 800;
+            transition: all 0.2s ease;
+        }
+
+        .code-copy-btn:hover {
+            background: rgba(255, 122, 92, 0.12);
+            color: var(--accent);
+            border-color: rgba(255, 122, 92, 0.35);
+        }
+
+        .message-code-block pre {
+            margin: 0;
+            padding: 16px;
+            overflow-x: auto;
+            background: transparent;
+        }
+
+        .message-code-block code {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.55;
+            white-space: pre;
+            color: #e5e5e5;
+        }
+
         .input-field-wrapper {
             flex: 1;
             display: flex;
@@ -1311,12 +1619,42 @@
                 <a class="header-nav-link" href="https://btechx.infinityfreeapp.com/about.html">About</a>
                 <a class="header-nav-link highlight" href="#">AI Mode</a>
             </nav>
+            <button class="btn-history" onclick="toggleChatHistory()" title="Chat History">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 8v4l3 3" />
+                    <circle cx="12" cy="12" r="9" />
+                </svg>
+            </button>
             <div class="header-status">
                 <div class="status-indicator"></div>
                 <span>Live</span>
             </div>
         </div>
     </header>
+
+    <!-- ─── CHAT HISTORY SIDEBAR ─── -->
+    <div id="chat-history-overlay" onclick="toggleChatHistory()"></div>
+    <aside id="chat-history-panel">
+        <div class="history-header">
+            <h3>💬 Chat History</h3>
+            <button class="history-close" onclick="toggleChatHistory()" aria-label="Close chat history">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="history-actions">
+            <button class="btn-new-chat" onclick="createNewChat()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+                New Chat
+            </button>
+        </div>
+        <div id="chat-list" class="chat-list">
+            <div class="chat-list-loading">Loading chats...</div>
+        </div>
+    </aside>
 
     <!-- ─── CHAT ─── -->
     <div class="chat-container">
@@ -1341,25 +1679,7 @@
 
     <!-- ─── INPUT ─── -->
     <div class="input-section">
-        <div class="format-panel" aria-label="Response formatting controls">
-            <span class="format-panel-label">Response Style</span>
-            <label class="format-option">
-                <input type="checkbox" data-format-option="bold" checked>
-                <strong>Bold</strong>
-            </label>
-            <label class="format-option">
-                <input type="checkbox" data-format-option="italic" checked>
-                <em>Italic</em>
-            </label>
-            <label class="format-option">
-                <input type="checkbox" data-format-option="strikethrough" checked>
-                <s>Strikethrough</s>
-            </label>
-            <label class="format-option">
-                <input type="checkbox" data-format-option="monospace" checked>
-                <code>Monospace</code>
-            </label>
-        </div>
+        <!-- Format panel removed -->
         <div id="attachment-preview" class="attachment-preview" hidden></div>
         <div class="input-area">
             <div class="input-field-wrapper">
@@ -1403,8 +1723,8 @@
         const attachmentPreview = document.getElementById('attachment-preview');
         const formatInputs = document.querySelectorAll('[data-format-option]');
         const API_URL = window.location.origin + '/chat';
-        const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-        const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+        const MAX_IMAGE_BYTES = 100 * 1024 * 1024;
+        const MAX_DOCUMENT_BYTES = 50 * 1024 * 1024;
         const SUPPORTED_ATTACHMENT_TYPES = [
             'image/png',
             'image/jpeg',
@@ -1419,6 +1739,180 @@
         let conversationHistory = [];
         let hasStartedConversation = false;
         let selectedImage = null;
+        let currentChatId = null;
+
+        // ─ CHAT HISTORY FUNCTIONS ─
+        async function loadChatList() {
+            try {
+                const response = await fetch(window.location.origin + '/chats');
+                const data = await response.json();
+                
+                const chatListEl = document.getElementById('chat-list');
+                if (!data.chats || data.chats.length === 0) {
+                    chatListEl.innerHTML = `
+                        <div class="chat-empty">
+                            <div class="chat-empty-icon">💬</div>
+                            <p>No chat history yet.<br>Start a new conversation!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                chatListEl.innerHTML = data.chats.map(chat => `
+                    <div class="chat-item ${chat.chat_id === currentChatId ? 'active' : ''}" 
+                         onclick="loadChat('${chat.chat_id}')">
+                        <div class="chat-item-title">${escapeHtml(chat.title)}</div>
+                        <div class="chat-item-meta">
+                            <span>${chat.message_count} messages</span>
+                            <button class="chat-item-delete" onclick="event.stopPropagation(); deleteChat('${chat.chat_id}')" title="Delete chat">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load chat list:', error);
+                document.getElementById('chat-list').innerHTML = '<div class="chat-list-loading">Failed to load chats</div>';
+            }
+        }
+
+        async function createNewChat() {
+            try {
+                const response = await fetch(window.location.origin + '/chats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: 'New Chat' })
+                });
+                const data = await response.json();
+                
+                currentChatId = data.chat_id;
+                conversationHistory = [];
+                hasStartedConversation = false;
+                
+                // Clear chat box and show welcome screen
+                chatBox.innerHTML = `
+                    <div class="welcome-screen">
+                        <div class="welcome-icon rotating-swastik">卐</div>
+                        <div>
+                            <h2 class="welcome-title">Namaste</h2>
+                            <p class="welcome-subtitle">Our intelligent companion rooted in Indian culture, technology, and
+                                heritage. Start a conversation to explore knowledge across science, engineering, history, and
+                                more.</p>
+                        </div>
+                        <div class="quick-prompts">
+                            <div class="prompt-chip" onclick="useSuggestion(this)">🏛️ Tell me about the Vedas</div>
+                            <div class="prompt-chip" onclick="useSuggestion(this)">💻 Explain DSA in simple terms</div>
+                            <div class="prompt-chip" onclick="useSuggestion(this)">🧮 History of Indian mathematics</div>
+                            <div class="prompt-chip" onclick="useSuggestion(this)">🚀 ISRO's latest missions</div>
+                        </div>
+                    </div>
+                `;
+                
+                await loadChatList();
+                toggleChatHistory();
+            } catch (error) {
+                console.error('Failed to create new chat:', error);
+            }
+        }
+
+        async function loadChat(chatId) {
+            try {
+                const response = await fetch(window.location.origin + '/chat/' + chatId);
+                const data = await response.json();
+                
+                if (!data.messages) return;
+                
+                currentChatId = chatId;
+                
+                // Clear chat box
+                chatBox.innerHTML = '';
+                hasStartedConversation = true;
+                
+                // Display messages
+                data.messages.forEach(msg => {
+                    addMessage(msg.content, msg.role === 'user' ? 'user' : 'ai');
+                });
+                
+                // Update conversation history for API
+                conversationHistory = data.messages.map(msg => ({
+                    role: msg.role,
+                    content: msg.content
+                }));
+                
+                await loadChatList();
+                toggleChatHistory();
+            } catch (error) {
+                console.error('Failed to load chat:', error);
+            }
+        }
+
+        async function deleteChat(chatId) {
+            if (!confirm('Are you sure you want to delete this chat?')) return;
+            
+            try {
+                await fetch(window.location.origin + '/chat/' + chatId, {
+                    method: 'DELETE'
+                });
+                
+                if (currentChatId === chatId) {
+                    currentChatId = null;
+                    conversationHistory = [];
+                }
+                
+                await loadChatList();
+            } catch (error) {
+                console.error('Failed to delete chat:', error);
+            }
+        }
+
+        function toggleChatHistory() {
+            const panel = document.getElementById('chat-history-panel');
+            const overlay = document.getElementById('chat-history-overlay');
+            
+            if (panel.classList.contains('open')) {
+                panel.classList.remove('open');
+                overlay.classList.remove('active');
+                setTimeout(() => { overlay.style.display = 'none'; }, 300);
+                document.body.style.overflow = '';
+            } else {
+                overlay.style.display = 'block';
+                requestAnimationFrame(() => overlay.classList.add('active'));
+                panel.classList.add('open');
+                document.body.style.overflow = 'hidden';
+                loadChatList();
+            }
+        }
+
+        // Save message to chat storage
+        async function saveMessageToChat(role, content) {
+            if (!currentChatId) {
+                // Create new chat first
+                try {
+                    const response = await fetch(window.location.origin + '/chats', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: content.substring(0, 50) + (content.length > 50 ? '...' : '') })
+                    });
+                    const data = await response.json();
+                    currentChatId = data.chat_id;
+                } catch (error) {
+                    console.error('Failed to create chat:', error);
+                    return;
+                }
+            }
+            
+            try {
+                await fetch(window.location.origin + '/chat/' + currentChatId + '/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: role, content: content })
+                });
+            } catch (error) {
+                console.error('Failed to save message:', error);
+            }
+        }
 
         // ─ DRAWER ─
         function openDrawer() {
@@ -1470,7 +1964,7 @@
         }
 
         function escapeHtml(value) {
-            return value.replace(/[&<>"']/g, char => ({
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
                 '&': '&amp;',
                 '<': '&lt;',
                 '>': '&gt;',
@@ -1479,15 +1973,96 @@
             }[char]));
         }
 
-        function renderLimitedMarkdown(text) {
-            let html = escapeHtml(text);
+        function renderInlineMarkup(text) {
+            const markdownLinks = [];
+            const withPlaceholders = String(text ?? '').replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, (_, label, url) => {
+                const token = `@@BTXLINK${markdownLinks.length}@@`;
+                markdownLinks.push({
+                    token,
+                    url,
+                    label: escapeHtml(label)
+                });
+                return token;
+            });
+
+            let html = escapeHtml(withPlaceholders);
             html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
             html = html.replace(/~~(.+?)~~/gs, '<s>$1</s>');
             html = html.replace(/\*\*(.+?)\*\*/gs, '<strong>$1</strong>');
             html = html.replace(/__(.+?)__/gs, '<strong>$1</strong>');
             html = html.replace(/(^|[^*])\*(?!\*)([^*\n]+?)\*(?!\*)/g, '$1<em>$2</em>');
             html = html.replace(/(^|[^_])_(?!_)([^_\n]+?)_(?!_)/g, '$1<em>$2</em>');
+            html = html.replace(/((?:https?:\/\/|www\.)[^\s<]+)/gi, (fullMatch) => {
+                const trailing = fullMatch.match(/[.,!?;:)\]]+$/)?.[0] || '';
+                const cleanUrl = trailing ? fullMatch.slice(0, -trailing.length) : fullMatch;
+                const href = cleanUrl.startsWith('http') ? cleanUrl : `https://${cleanUrl}`;
+                return `<a href="${href}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>${trailing}`;
+            });
+            markdownLinks.forEach(link => {
+                html = html.replace(
+                    link.token,
+                    `<a href="${link.url}" target="_blank" rel="noopener noreferrer">${link.label}</a>`
+                );
+            });
             return html;
+        }
+
+        function renderRichText(text) {
+            const normalized = String(text ?? '').replace(/\r\n/g, '\n');
+            const parts = [];
+            let lastIndex = 0;
+            const codeFenceRegex = /```(?:([^\n]*)\n)?([\s\S]*?)```/g;
+            let match;
+
+            while ((match = codeFenceRegex.exec(normalized)) !== null) {
+                const before = normalized.slice(lastIndex, match.index);
+                if (before) parts.push({ type: 'text', content: before });
+                parts.push({
+                    type: 'code',
+                    content: match[2],
+                    language: match[1] ? match[1].trim() : ''
+                });
+                lastIndex = match.index + match[0].length;
+            }
+
+            const rest = normalized.slice(lastIndex);
+            if (rest) parts.push({ type: 'text', content: rest });
+
+            return parts.map(part => {
+                if (part.type === 'code') {
+                    const languageLabel = part.language ? escapeHtml(part.language) : 'Code';
+                    return `
+                        <div class="message-code-block">
+                            <div class="code-header">
+                                <span>${languageLabel}</span>
+                                <button type="button" class="code-copy-btn" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <pre><code>${escapeHtml(part.content)}</code></pre>
+                        </div>
+                    `;
+                }
+
+                const lines = part.content.split('\n');
+                return lines.map(line => {
+                    if (!line.trim()) {
+                        return '<div class="message-spacer" aria-hidden="true"></div>';
+                    }
+
+                    const titleMatch = line.match(/^###\s*(.+)$/);
+                    if (titleMatch) {
+                        return `<div class="message-title">${renderInlineMarkup(titleMatch[1])}</div>`;
+                    }
+
+                    return `<div class="message-line">${renderInlineMarkup(line)}</div>`;
+                }).join('');
+            }).join('');
+        }
+
+        function copyCode(button) {
+            const codeElement = button.closest('.message-code-block')?.querySelector('code');
+            if (!codeElement) return;
+            const codeText = codeElement.textContent || '';
+            copyText(codeText, button);
         }
 
         function formatFileSize(bytes) {
@@ -1603,7 +2178,7 @@
             }
 
             if (file.size > maxBytes) {
-                alert(isImage ? 'Image must be 5 MB or smaller.' : 'Document must be 10 MB or smaller.');
+                alert(isImage ? 'Image must be 100 MB or smaller.' : 'Document must be 10 MB or smaller.');
                 imageInput.value = '';
                 return;
             }
@@ -1657,11 +2232,7 @@
 
             const bubble = document.createElement('div');
             bubble.className = `bubble ${sender}${isError ? ' error' : ''}`;
-            if (sender === 'ai' && !isError) {
-                bubble.innerHTML = renderLimitedMarkdown(text);
-            } else {
-                bubble.textContent = text;
-            }
+            bubble.innerHTML = renderRichText(text);
 
             if (options.image) {
                 const attachment = document.createElement('div');
@@ -1760,6 +2331,8 @@
             if (!options.skipUserBubble) {
                 addMessage(visibleUserText, 'user', false, { image: attachmentToSend });
                 conversationHistory.push({ role: 'user', content: userHistoryText });
+                // Save user message to chat storage
+                await saveMessageToChat('user', userHistoryText);
             }
 
             if (!isRetry) {
@@ -1793,6 +2366,8 @@
                 const reply = data.response || 'No response received.';
                 conversationHistory.push({ role: 'assistant', content: reply });
                 addMessage(reply, 'ai', false, { requestPayload });
+                // Save AI response to chat storage
+                await saveMessageToChat('assistant', reply);
 
             } catch (err) {
                 removeTypingIndicator();
@@ -1839,6 +2414,9 @@
             );
             setSelectedAttachment(renamedImage);
         });
+
+        // Load chat list on page load
+        loadChatList();
 
         userInput.focus();
     </script>
