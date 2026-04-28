@@ -4,12 +4,43 @@ import re
 import sys
 import base64
 import binascii
+import ipaddress
 import io
 import shutil
+import socket
+import time
+from html import unescape
 from datetime import datetime
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from sarvamai import SarvamAI
+
+try:
+    import requests
+except ImportError:
+    requests = None
+
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
+
+try:
+    from newspaper import Article
+except ImportError:
+    Article = None
+
+try:
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options as ChromeOptions
+    from selenium.webdriver.common.by import By
+except ImportError:
+    webdriver = None
+    ChromeOptions = None
+    By = None
 
 try:
     import easyocr
@@ -50,8 +81,83 @@ except ImportError:
 app = Flask(__name__, template_folder='templates', static_folder='.', static_url_path='')
 CORS(app)  # Enables cross-origin requests from frontend
 
+
 API_KEY = os.environ.get("SARVAM_API_KEY")
 client = SarvamAI(api_subscription_key=API_KEY)
+
+# ─ CHAT STORAGE CONFIGURATION ─
+CHATS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chats')
+os.makedirs(CHATS_DIR, exist_ok=True)
+
+def get_chat_storage_path(chat_id: str) -> str:
+    """Get the file path for a chat storage."""
+    return os.path.join(CHATS_DIR, f"{chat_id}.json")
+
+def save_chat(chat_id: str, messages: list, metadata: dict = None) -> bool:
+    """Save chat messages to a JSON file."""
+    try:
+        chat_data = {
+            "chat_id": chat_id,
+            "messages": messages,
+            "metadata": metadata or {},
+            "updated_at": get_timestamp()
+        }
+        with open(get_chat_storage_path(chat_id), 'w', encoding='utf-8') as f:
+            json.dump(chat_data, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        log_message("ERROR", f"Failed to save chat {chat_id}: {str(e)}")
+        return False
+
+def load_chat(chat_id: str) -> dict | None:
+    """Load chat messages from a JSON file."""
+    try:
+        path = get_chat_storage_path(chat_id)
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return None
+    except Exception as e:
+        log_message("ERROR", f"Failed to load chat {chat_id}: {str(e)}")
+        return None
+
+def delete_chat(chat_id: str) -> bool:
+    """Delete a chat from storage."""
+    try:
+        path = get_chat_storage_path(chat_id)
+        if os.path.exists(path):
+            os.remove(path)
+        return True
+    except Exception as e:
+        log_message("ERROR", f"Failed to delete chat {chat_id}: {str(e)}")
+        return False
+
+def list_all_chats() -> list:
+    """List all saved chats."""
+    chats = []
+    try:
+        for filename in os.listdir(CHATS_DIR):
+            if filename.endswith('.json'):
+                chat_id = filename[:-5]
+                chat_data = load_chat(chat_id)
+                if chat_data:
+                    chats.append({
+                        "chat_id": chat_id,
+                        "title": chat_data.get("metadata", {}).get("title", "Untitled Chat"),
+                        "message_count": len(chat_data.get("messages", [])),
+                        "updated_at": chat_data.get("updated_at", "")
+                    })
+    except Exception as e:
+        log_message("ERROR", f"Failed to list chats: {str(e)}")
+    
+    # Sort by updated time, newest first
+    chats.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
+    return chats
+
+def generate_chat_id() -> str:
+    """Generate a unique chat ID."""
+    import uuid
+    return str(uuid.uuid4())
 
 # ─ SYSTEM CONFIGURATION ─
 SYSTEM_PROMPT = {
@@ -65,9 +171,12 @@ SYSTEM_PROMPT = {
         "in natural Hinglish. Keep answers concise by default and expand only when the user asks "
         "for detail. Avoid sounding like a speech or essay unless explicitly requested. "
         "Prefer 1-3 short paragraphs. When useful, break the answer into short points or steps. "
-        "For technical questions, include compact examples or code snippets when helpful. "
-        "Do not force every answer into one long paragraph."
-        "Answer all the Answer in 750 words, if user ask more detailed answer then give the response in between 850 words."
+        "For technical questions, include compact examples or code snippets when helpful."
+        "Do not force every answer into one long paragraph. "
+        "If website content is included in the prompt context, use it carefully and mention source links when helpful. "
+        "If live website content is unavailable, be honest instead of pretending to have browsed. "
+        "Answer all the Answer in 750 words, if user ask more detailed answer then give the response in between 850 words. "
+        ""
     )
 }
 
@@ -86,11 +195,21 @@ SUPPORTED_DOCUMENT_TYPES = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 }
 SUPPORTED_ATTACHMENT_TYPES = SUPPORTED_IMAGE_TYPES | SUPPORTED_DOCUMENT_TYPES
-MAX_IMAGE_BYTES = 5 * 1024 * 1024
-MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
+MAX_IMAGE_BYTES = 100 * 1024 * 1024
+MAX_DOCUMENT_BYTES = 50 * 1024 * 1024 #50GB
 OCR_READER = None
 TESSERACT_AVAILABLE = pytesseract is not None and shutil.which("tesseract") is not None
 GPU_AVAILABLE = torch is not None and torch.cuda.is_available()
+URL_PATTERN = re.compile(r'(?P<url>(?:https?://|www\.)[^\s<>"\'`]+)', re.IGNORECASE)
+MAX_URL_CONTEXTS = 3
+MAX_FETCH_CHARS = 12000
+ARTICLE_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36 BTechXAI/2.0"
+)
+ARTICLE_REQUEST_TIMEOUT = 12
+SELENIUM_PAGE_LOAD_TIMEOUT = 18
+MIN_ARTICLE_CHARS = 500
 
 def get_timestamp():
     """Return current timestamp for logging."""
@@ -119,6 +238,323 @@ def clean_response(text: str) -> str:
         text = text.replace('\n\n\n', '\n\n')
 
     return text
+
+def extract_urls(text: str) -> list[str]:
+    """Return normalized HTTP(S) URLs from message text."""
+    if not text:
+        return []
+
+    urls = []
+    seen = set()
+    for match in URL_PATTERN.finditer(text):
+        candidate = match.group("url").rstrip(".,;:!?)]}")
+        normalized = candidate if candidate.lower().startswith(("http://", "https://")) else f"https://{candidate}"
+        if normalized not in seen:
+            seen.add(normalized)
+            urls.append(normalized)
+    return urls
+
+def html_to_text(html: str) -> str:
+    """Strip HTML to compact readable text."""
+    if not html:
+        return ""
+
+    html = re.sub(r"(?is)<script\b.*?</script>", " ", html)
+    html = re.sub(r"(?is)<style\b.*?</style>", " ", html)
+
+    title_match = re.search(r"(?is)<title[^>]*>(.*?)</title>", html)
+    title_text = ""
+    if title_match:
+        title_text = unescape(re.sub(r"\s+", " ", title_match.group(1))).strip()
+
+    body_text = re.sub(r"(?s)<[^>]+>", " ", html)
+    body_text = unescape(body_text)
+    body_text = re.sub(r"\s+", " ", body_text).strip()
+
+    if title_text and not body_text.lower().startswith(title_text.lower()):
+        body_text = f"{title_text}. {body_text}"
+
+    return body_text[:MAX_FETCH_CHARS]
+
+def compact_text(text: str, max_chars: int = MAX_FETCH_CHARS) -> str:
+    """Normalize extracted article text into compact readable context."""
+    if not text:
+        return ""
+
+    text = unescape(str(text))
+    text = re.sub(r"\r\n?", "\n", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n[ \t]+", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = text.strip()
+    return text[:max_chars]
+
+def is_public_url(url: str) -> tuple[bool, str]:
+    """Allow only public HTTP(S) URLs to avoid fetching local/private services."""
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return False, "Unsupported URL scheme."
+
+    hostname = parsed.hostname
+    if not hostname:
+        return False, "URL is missing a hostname."
+
+    if hostname.lower() in {"localhost", "localhost.localdomain"}:
+        return False, "Localhost URLs are not allowed."
+
+    try:
+        addresses = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        return False, "Could not resolve website hostname."
+
+    for address in addresses:
+        ip_value = address[4][0]
+        try:
+            ip = ipaddress.ip_address(ip_value)
+        except ValueError:
+            continue
+
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_reserved:
+            return False, "Private or local network URLs are not allowed."
+
+    return True, ""
+
+def build_article_result(url: str, method: str, content: str, title: str = "", metadata: dict | None = None) -> dict:
+    """Create a consistent fetch result for website context blocks."""
+    return {
+        "url": url,
+        "status": "ok",
+        "method": method,
+        "title": compact_text(title, 300),
+        "content": compact_text(content),
+        "metadata": metadata or {},
+    }
+
+def extract_with_newspaper(url: str, html: str | None = None) -> dict | None:
+    """Extract article text using newspaper3k when available."""
+    if Article is None:
+        return None
+
+    try:
+        article = Article(url, browser_user_agent=ARTICLE_USER_AGENT)
+        if html:
+            article.set_html(html)
+        else:
+            article.download()
+        article.parse()
+
+        content = compact_text(article.text)
+        if len(content) < MIN_ARTICLE_CHARS:
+            return None
+
+        metadata = {
+            "authors": ", ".join(article.authors[:5]) if article.authors else "",
+            "publish_date": str(article.publish_date) if article.publish_date else "",
+        }
+        return build_article_result(url, "newspaper3k", content, article.title, metadata)
+    except Exception as newspaper_error:
+        log_message("WARNING", f"newspaper3k extraction failed for {url}: {str(newspaper_error)}")
+        return None
+
+def extract_with_beautifulsoup(url: str, html: str) -> dict | None:
+    """Extract readable article text using BeautifulSoup."""
+    if BeautifulSoup is None or not html:
+        return None
+
+    try:
+        soup = BeautifulSoup(html, "html.parser")
+        for tag in soup(["script", "style", "noscript", "svg", "iframe", "form", "nav", "footer", "header"]):
+            tag.decompose()
+
+        title = ""
+        if soup.title and soup.title.string:
+            title = soup.title.string.strip()
+
+        candidates = []
+        for selector in ("article", "main", "[role='main']", ".article", ".post", ".entry-content", ".content"):
+            for node in soup.select(selector):
+                text = compact_text(node.get_text("\n"))
+                if text:
+                    candidates.append(text)
+
+        if not candidates:
+            paragraphs = [compact_text(p.get_text(" ")) for p in soup.find_all(["p", "li"])]
+            candidates = [paragraph for paragraph in paragraphs if len(paragraph) > 40]
+
+        content = compact_text("\n\n".join(candidates))
+        if len(content) < 200:
+            content = compact_text(soup.get_text("\n"))
+        if not content:
+            return None
+
+        return build_article_result(url, "requests + BeautifulSoup", content, title)
+    except Exception as soup_error:
+        log_message("WARNING", f"BeautifulSoup extraction failed for {url}: {str(soup_error)}")
+        return None
+
+def fetch_html_with_requests(url: str) -> tuple[str, str]:
+    """Fetch raw website HTML using requests."""
+    if requests is None:
+        return "", "requests is not installed."
+
+    response = requests.get(
+        url,
+        headers={
+            "User-Agent": ARTICLE_USER_AGENT,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.7",
+            "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
+        },
+        timeout=ARTICLE_REQUEST_TIMEOUT,
+        allow_redirects=True,
+    )
+    response.raise_for_status()
+
+    content_type = response.headers.get("Content-Type", "").lower()
+    if "text/html" not in content_type and "text/plain" not in content_type and content_type:
+        return "", f"Skipped non-text response ({content_type})."
+
+    response.encoding = response.encoding or response.apparent_encoding or "utf-8"
+    return response.text, ""
+
+def extract_with_selenium(url: str) -> dict | None:
+    """Render JavaScript-heavy pages with Selenium as a final fallback."""
+    if webdriver is None or ChromeOptions is None:
+        return None
+
+    driver = None
+    try:
+        options = ChromeOptions()
+        options.add_argument("--headless=new")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--window-size=1365,900")
+        options.add_argument(f"--user-agent={ARTICLE_USER_AGENT}")
+
+        driver = webdriver.Chrome(options=options)
+        driver.set_page_load_timeout(SELENIUM_PAGE_LOAD_TIMEOUT)
+        driver.get(url)
+        time.sleep(2)
+
+        title = driver.title or ""
+        html = driver.page_source or ""
+        result = extract_with_newspaper(url, html) or extract_with_beautifulsoup(url, html)
+        if result:
+            result["method"] = f"selenium + {result['method']}"
+            if title and not result.get("title"):
+                result["title"] = compact_text(title, 300)
+            return result
+
+        body = driver.find_element(By.TAG_NAME, "body").text if By is not None else ""
+        if body:
+            return build_article_result(url, "selenium", body, title)
+    except Exception as selenium_error:
+        log_message("WARNING", f"Selenium extraction failed for {url}: {str(selenium_error)}")
+    finally:
+        if driver is not None:
+            try:
+                driver.quit()
+            except Exception:
+                pass
+
+    return None
+
+def fetch_website_context(url: str) -> dict:
+    """Fetch readable article/page text from a user-provided public website."""
+    is_allowed, block_reason = is_public_url(url)
+    if not is_allowed:
+        return {
+            "url": url,
+            "status": "blocked",
+            "method": "security-check",
+            "title": "",
+            "content": block_reason,
+            "metadata": {},
+        }
+
+    try:
+        newspaper_result = extract_with_newspaper(url)
+        if newspaper_result:
+            return newspaper_result
+
+        html, fetch_note = fetch_html_with_requests(url)
+        if html:
+            soup_result = extract_with_beautifulsoup(url, html)
+            if soup_result:
+                return soup_result
+
+            newspaper_from_html = extract_with_newspaper(url, html)
+            if newspaper_from_html:
+                return newspaper_from_html
+
+            fallback_text = html_to_text(html)
+            if fallback_text:
+                return build_article_result(url, "requests fallback", fallback_text)
+        elif fetch_note:
+            log_message("WARNING", f"requests fetch note for {url}: {fetch_note}")
+
+        selenium_result = extract_with_selenium(url)
+        if selenium_result:
+            return selenium_result
+
+        if fetch_note:
+            return {
+                "url": url,
+                "status": "unsupported",
+                "method": "requests",
+                "title": "",
+                "content": fetch_note,
+                "metadata": {},
+            }
+
+        return {
+            "url": url,
+            "status": "empty",
+            "method": "article-readers",
+            "title": "",
+            "content": "No readable text found on this page.",
+            "metadata": {},
+        }
+    except HTTPError as http_error:
+        return {"url": url, "status": "error", "method": "urllib", "title": "", "content": f"Website returned HTTP {http_error.code}.", "metadata": {}}
+    except URLError as url_error:
+        return {"url": url, "status": "error", "method": "urllib", "title": "", "content": f"Could not reach website: {url_error.reason}.", "metadata": {}}
+    except Exception as fetch_error:
+        selenium_result = extract_with_selenium(url)
+        if selenium_result:
+            return selenium_result
+
+        log_message("WARNING", f"Website fetch failed for {url}: {str(fetch_error)}")
+        return {"url": url, "status": "error", "method": "article-readers", "title": "", "content": f"Could not fetch website content: {str(fetch_error)}.", "metadata": {}}
+
+def build_website_context(message: str) -> str:
+    """Build supplemental website text from URLs included in the prompt."""
+    urls = extract_urls(message)[:MAX_URL_CONTEXTS]
+    if not urls:
+        return ""
+
+    context_blocks = []
+    for url in urls:
+        result = fetch_website_context(url)
+        lines = [
+            "[Website context]",
+            f"Source: {result['url']}",
+            f"Status: {result.get('status', 'unknown')}",
+            f"Reader: {result.get('method', 'unknown')}",
+        ]
+        if result.get("title"):
+            lines.append(f"Title: {result['title']}")
+
+        metadata = result.get("metadata") or {}
+        if metadata.get("authors"):
+            lines.append(f"Authors: {metadata['authors']}")
+        if metadata.get("publish_date"):
+            lines.append(f"Published: {metadata['publish_date']}")
+
+        lines.append(f"Content: {result.get('content', '')}")
+        context_blocks.append("\n".join(lines))
+
+    return "\n\n".join(context_blocks)
 
 def get_format_options(data: dict) -> dict:
     """Return user-selected response formatting preferences."""
@@ -227,7 +663,7 @@ def parse_uploaded_attachment(attachment_payload: dict) -> tuple[dict | None, st
         return None, f"Attachment must be {max_mb} MB or smaller"
 
     if is_image and len(attachment_bytes) > MAX_IMAGE_BYTES:
-        return None, "Image must be 5 MB or smaller"
+        return None, f"Image must be 100 MB or smaller"
 
     return {
         "name": str(attachment_name)[:120],
@@ -397,8 +833,10 @@ def extract_text_from_attachment(attachment_info: dict) -> str:
 
 def build_user_content(message: str, attachment_info: dict | None, attachment_text: str) -> str:
     """Combine the user's text with attachment metadata/extracted text for the text-only model."""
+    website_context = build_website_context(message)
+
     if not attachment_info:
-        return message
+        return "\n\n".join(part for part in [message, website_context] if part)
 
     attachment_label = "image" if attachment_info["kind"] == "image" else "document"
     parts = [
@@ -426,6 +864,8 @@ def build_user_content(message: str, attachment_info: dict | None, attachment_te
         parts.append(
             "If the user asks about visual details not present in OCR text, be honest that only OCR/text context is available."
         )
+    if website_context:
+        parts.extend(["", website_context])
     return "\n".join(parts)
 
 def validate_request(data: dict) -> tuple[bool, str]:
@@ -564,19 +1004,200 @@ def info():
         'endpoints': [
             '/health',
             '/info',
-            '/chat'
+            '/chat',
+            '/chats',
+            '/chat/<chat_id>',
+            '/chat/<chat_id>/messages'
         ],
         'features': [
             'Multi-turn conversation support',
             'Markdown cleaning',
             'User-controlled response formatting',
+            'Article and website reading via newspaper3k, requests, BeautifulSoup, and Selenium fallback',
             'Image upload/paste with OCR context',
             'PDF, TXT, DOC, and DOCX upload support',
             'Request validation',
             'Error handling',
-            'Comprehensive logging'
+            'Comprehensive logging',
+            'Chat history storage & memory'
         ]
     }), 200
+
+# ─ CHAT STORAGE ENDPOINTS ─
+@app.route('/chats', methods=['GET'])
+def get_chats():
+    """Get list of all saved chats."""
+    try:
+        chats = list_all_chats()
+        return jsonify({
+            'chats': chats,
+            'count': len(chats),
+            'success': True
+        }), 200
+    except Exception as e:
+        log_message("ERROR", f"Failed to get chats: {str(e)}")
+        return jsonify({'error': 'Failed to retrieve chats'}), 500
+
+@app.route('/chats', methods=['POST'])
+def create_chat():
+    """Create a new chat."""
+    try:
+        data = request.get_json() or {}
+        chat_id = generate_chat_id()
+        title = data.get('title', 'New Chat')
+        
+        metadata = {
+            "title": title,
+            "created_at": get_timestamp()
+        }
+        
+        save_chat(chat_id, [], metadata)
+        
+        return jsonify({
+            'chat_id': chat_id,
+            'title': title,
+            'success': True
+        }), 201
+    except Exception as e:
+        log_message("ERROR", f"Failed to create chat: {str(e)}")
+        return jsonify({'error': 'Failed to create chat'}), 500
+
+@app.route('/chat/<chat_id>', methods=['GET'])
+def get_chat(chat_id):
+    """Get a specific chat by ID."""
+    try:
+        chat_data = load_chat(chat_id)
+        if chat_data is None:
+            return jsonify({'error': 'Chat not found'}), 404
+        
+        return jsonify({
+            'chat_id': chat_id,
+            'messages': chat_data.get('messages', []),
+            'metadata': chat_data.get('metadata', {}),
+            'success': True
+        }), 200
+    except Exception as e:
+        log_message("ERROR", f"Failed to get chat {chat_id}: {str(e)}")
+        return jsonify({'error': 'Failed to retrieve chat'}), 500
+
+@app.route('/chat/<chat_id>', methods=['PUT'])
+def update_chat(chat_id):
+    """Update chat metadata (title, etc)."""
+    try:
+        data = request.get_json() or {}
+        chat_data = load_chat(chat_id)
+        
+        if chat_data is None:
+            return jsonify({'error': 'Chat not found'}), 404
+        
+        # Update metadata
+        if 'title' in data:
+            chat_data['metadata']['title'] = data['title']
+        
+        save_chat(chat_id, chat_data.get('messages', []), chat_data.get('metadata', {}))
+        
+        return jsonify({
+            'chat_id': chat_id,
+            'success': True
+        }), 200
+    except Exception as e:
+        log_message("ERROR", f"Failed to update chat {chat_id}: {str(e)}")
+        return jsonify({'error': 'Failed to update chat'}), 500
+
+@app.route('/chat/<chat_id>', methods=['DELETE'])
+def delete_chat_endpoint(chat_id):
+    """Delete a specific chat."""
+    try:
+        if delete_chat(chat_id):
+            return jsonify({
+                'chat_id': chat_id,
+                'success': True
+            }), 200
+        return jsonify({'error': 'Chat not found'}), 404
+    except Exception as e:
+        log_message("ERROR", f"Failed to delete chat {chat_id}: {str(e)}")
+        return jsonify({'error': 'Failed to delete chat'}), 500
+
+@app.route('/chat/<chat_id>/messages', methods=['POST'])
+def add_message_to_chat(chat_id):
+    """Add a message to an existing chat."""
+    try:
+        data = request.get_json() or {}
+        role = data.get('role', 'user')
+        content = data.get('content', '')
+        
+        if not content:
+            return jsonify({'error': 'Message content is required'}), 400
+        
+        chat_data = load_chat(chat_id)
+        
+        if chat_data is None:
+            # Create new chat if doesn't exist
+            chat_data = {
+                "chat_id": chat_id,
+                "messages": [],
+                "metadata": {"title": "Chat"},
+                "updated_at": get_timestamp()
+            }
+        
+        messages = chat_data.get('messages', [])
+        messages.append({
+            "role": role,
+            "content": content,
+            "timestamp": get_timestamp()
+        })
+        
+        # Auto-generate title from first user message if untitled
+        if chat_data.get('metadata', {}).get('title') == 'New Chat' and role == 'user':
+            title = content[:50] + ('...' if len(content) > 50 else '')
+            chat_data['metadata']['title'] = title
+        
+        save_chat(chat_id, messages, chat_data.get('metadata', {}))
+        
+        return jsonify({
+            'chat_id': chat_id,
+            'message_count': len(messages),
+            'success': True
+        }), 200
+    except Exception as e:
+        log_message("ERROR", f"Failed to add message to chat {chat_id}: {str(e)}")
+        return jsonify({'error': 'Failed to add message'}), 500
+
+@app.route('/chat/<chat_id>/messages', methods=['GET'])
+def get_chat_messages(chat_id):
+    """Get all messages from a chat."""
+    try:
+        chat_data = load_chat(chat_id)
+        if chat_data is None:
+            return jsonify({'error': 'Chat not found'}), 404
+        
+        return jsonify({
+            'chat_id': chat_id,
+            'messages': chat_data.get('messages', []),
+            'success': True
+        }), 200
+    except Exception as e:
+        log_message("ERROR", f"Failed to get messages for chat {chat_id}: {str(e)}")
+        return jsonify({'error': 'Failed to retrieve messages'}), 500
+
+@app.route('/chat/<chat_id>/messages', methods=['DELETE'])
+def clear_chat_messages(chat_id):
+    """Clear all messages from a chat."""
+    try:
+        chat_data = load_chat(chat_id)
+        
+        if chat_data is None:
+            return jsonify({'error': 'Chat not found'}), 404
+        
+        save_chat(chat_id, [], chat_data.get('metadata', {}))
+        
+        return jsonify({
+            'chat_id': chat_id,
+            'success': True
+        }), 200
+    except Exception as e:
+        log_message("ERROR", f"Failed to clear messages for chat {chat_id}: {str(e)}")
+        return jsonify({'error': 'Failed to clear messages'}), 500
 
 # ─ ERROR HANDLERS ─
 @app.errorhandler(404)
@@ -616,9 +1237,9 @@ if __name__ == '__main__':
     log_message("INFO", "BTechX AI Server v2.0")
     log_message("INFO", "Powered by Sarvam AI (sarvam-30b)")
     log_message("INFO", "=" * 60)
-    log_message("INFO", "Starting server on http://0.0.0.0:{port}")
-    log_message("INFO", "Health check: GET http://0.0.0.0:{port}/health")
-    log_message("INFO", "Chat endpoint: POST http://0.0.0.0:{port}/chat")
+    log_message("INFO", f"Starting server on http://0.0.0.0:{port}")
+    log_message("INFO", f"Health check: GET http://0.0.0.0:{port}/health")
+    log_message("INFO", f"Chat endpoint: POST http://0.0.0.0:{port}/chat")
     log_message("INFO", "=" * 60)
     
     try:
